@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
 	embeded "github.com/mynameismaxz/httpdebugger"
+	"github.com/mynameismaxz/httpdebugger/handlers"
 )
 
 func main() {
@@ -16,19 +16,9 @@ func main() {
 		Views: engine,
 	})
 
+	h := handlers.New()
+
 	// making handler
-	app.All("/", func(c *fiber.Ctx) error {
-		// response to show method, header, query params, body
-		// get header
-		headers := c.GetReqHeaders()
-		method := c.Method()
-		fmt.Println("Method: ", method)
-
-		return c.Render("views/index", fiber.Map{
-			"title": "Root pages",
-			"body":  headers,
-		})
-	})
-
+	app.All("/", h.MainRouteHandlers)
 	app.Listen(":3000")
 }
