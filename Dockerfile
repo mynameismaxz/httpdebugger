@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o app
+RUN go build -x -o app cmd/server/main.go
 
 # Stage 2: Create a minimal image to run the application
 FROM alpine:latest
