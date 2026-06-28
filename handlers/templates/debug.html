@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .Method }} {{ .Path }} — HTTP Debugger</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    header.top {
+      display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+      margin-bottom: 0.25rem;
+    }
+    .badge {
+      font-family: var(--mono); font-weight: 700; font-size: 0.8rem;
+      letter-spacing: 0.05em; padding: 0.3rem 0.65rem; border-radius: 6px;
+      background: var(--accent); color: #08131f; text-transform: uppercase;
+    }
+    .path { font-family: var(--mono); font-size: 1.1rem; word-break: break-all; }
+    .sub { color: var(--muted); font-size: 0.85rem; margin: 0.25rem 0 1.75rem; }
+    h2 {
+      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin: 1.75rem 0 0.6rem;
+    }
+    .panel {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    td {
+      padding: 0.55rem 0.85rem; vertical-align: top; font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    td.k {
+      font-family: var(--mono); color: var(--accent); white-space: nowrap;
+      width: 1%; font-size: 0.85rem;
+    }
+    td.v { font-family: var(--mono); word-break: break-all; }
+    td.v .multi { display: block; }
+    pre {
+      margin: 0; padding: 0.95rem 1rem; font-family: var(--mono);
+      font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;
+      max-height: 480px; overflow: auto;
+    }
+    .empty { color: var(--muted); font-style: italic; padding: 0.7rem 0.85rem; }
+    .flag {
+      display: inline-block; font-size: 0.72rem; font-family: var(--mono);
+      padding: 0.15rem 0.5rem; border-radius: 5px; margin-left: 0.4rem;
+      background: #7f1d1d; color: #fecaca;
+    }
+    footer { margin-top: 2.5rem; color: var(--muted); font-size: 0.78rem; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="top">
+      <span class="badge">{{ .Method }}</span>
+      <span class="path">{{ .Path }}</span>
+    </header>
+    <p class="sub">{{ .Timestamp }} · client {{ .ClientIP }}</p>
+
+    <h2>Connection</h2>
+    <div class="panel">
+      <table>
+        <tr><td class="k">Host</td><td class="v">{{ .Host }}</td></tr>
+        <tr><td class="k">Proto</td><td class="v">{{ .Proto }}</td></tr>
+        <tr><td class="k">Client IP</td><td class="v">{{ .ClientIP }}</td></tr>
+        <tr><td class="k">Remote Addr</td><td class="v">{{ .RemoteAddr }}</td></tr>
+        {{ if .TLS }}
+        <tr><td class="k">TLS Version</td><td class="v">{{ .TLS.Version }}</td></tr>
+        <tr><td class="k">Cipher Suite</td><td class="v">{{ .TLS.CipherSuite }}</td></tr>
+        <tr><td class="k">Server Name</td><td class="v">{{ .TLS.ServerName }}</td></tr>
+        {{ end }}
+      </table>
+    </div>
+
+    <h2>Query Parameters</h2>
+    <div class="panel">
+      {{ if .QuerySorted }}
+      <table>
+        {{ range .QuerySorted }}
+        <tr>
+          <td class="k">{{ .Key }}</td>
+          <td class="v">{{ range .Values }}<span class="multi">{{ . }}</span>{{ end }}</td>
+        </tr>
+        {{ end }}
+      </table>
+      {{ else }}
+      <div class="empty">(no query parameters)</div>
+      {{ end }}
+    </div>
+
+    <h2>Headers</h2>
+    <div class="panel">
+      {{ if .HeadersSorted }}
+      <table>
+        {{ range .HeadersSorted }}
+        <tr>
+          <td class="k">{{ .Key }}</td>
+          <td class="v">{{ range .Values }}<span class="multi">{{ . }}</span>{{ end }}</td>
+        </tr>
+        {{ end }}
+      </table>
+      {{ else }}
+      <div class="empty">(no headers)</div>
+      {{ end }}
+    </div>
+
+    <h2>Body
+      {{ if .BodyTruncated }}<span class="flag">truncated</span>{{ end }}
+      {{ if .BodyIsBinary }}<span class="flag">binary</span>{{ end }}
+    </h2>
+    <div class="panel">
+      {{ if .BodyIsBinary }}
+      <div class="empty">binary body, {{ .BodySize }} bytes (not displayed)</div>
+      {{ else if eq .BodySize 0 }}
+      <div class="empty">(empty body)</div>
+      {{ else }}
+      <pre>{{ .Body }}</pre>
+      {{ end }}
+    </div>
+
+    <footer>
+      HTTP Debugger · request <code>{{ .BodySize }}</code> body bytes ·
+      add <a href="?format=json">?format=json</a> for JSON.
+    </footer>
+  </div>
+</body>
+</html>

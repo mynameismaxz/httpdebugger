@@ -16,6 +16,7 @@ WORKDIR /app
 
 COPY --from=builder /app/server .
 
-EXPOSE 1337
+# Cloud Run routes traffic to the port from the PORT env var (default 8080).
+EXPOSE 8080
 
 CMD ["./server"]
